@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureVault — Vault</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span> SecureVault</div>
+  <div class="topbar-actions">
+    <button class="btn-ghost" id="scorecardBtn">Health check</button>
+    <button class="btn-ghost" id="activityBtn">Activity</button>
+    <button class="btn-ghost" id="securityBtn">Security</button>
+    <button class="btn-ghost" id="logoutBtn">Log out</button>
+  </div>
+</div>
+
+<div class="dashboard-body">
+  <div class="dashboard-header">
+    <h2>Your vault</h2>
+    <button class="btn-accent" id="addItemBtn">+ Add item</button>
+  </div>
+  <div id="listArea"></div>
+</div>
+
+<!-- ADD ITEM MODAL -->
+<div class="modal-overlay" id="itemModalOverlay">
+  <div class="modal">
+    <h3 id="itemModalTitle">Add vault item</h3>
+    <div id="itemAlert" class="alert"></div>
+    <form id="itemForm">
+      <div class="field">
+        <label for="itemType">Type</label>
+        <select id="itemType">
+          <option value="LOGIN">Login</option>
+          <option value="NOTE">Secure note</option>
+          <option value="CARD">Card</option>
+          <option value="API_KEY">API key</option>
+          <option value="SSH_KEY">SSH / private key</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="itemTitleInput">Title</label>
+        <input type="text" id="itemTitleInput" placeholder="e.g. Gmail" required>
+      </div>
+
+      <!-- LOGIN fields -->
+      <div id="loginFields">
+        <div class="field">
+          <label for="loginUsername">Username / email</label>
+          <input type="text" id="loginUsername" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="loginPasswordField">Password</label>
+          <div style="display:flex; gap:8px;">
+            <input type="password" id="loginPasswordField" autocomplete="off" style="flex:1">
+            <button type="button" class="icon-btn" id="togglePwVisibility" title="Show/hide">👁</button>
+          </div>
+
+          <div class="mode-toggle" style="margin-top:10px;">
+            <button type="button" class="mode-btn active" id="modeRandomBtn">Random chars</button>
+            <button type="button" class="mode-btn" id="modePassphraseBtn">Passphrase</button>
+          </div>
+          <button type="button" class="btn-ghost" id="generatePwBtn" style="width:100%; margin-bottom:6px;">🎲 Generate</button>
+
+          <div class="strength-track"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="hint" id="strengthLabel">&nbsp;</div>
+
+          <button type="button" class="btn-ghost" id="checkBreachBtn" style="width:100%; margin-top:8px;">Check against known breaches</button>
+          <div id="breachResult" class="breach-badge" style="display:none;"></div>
+        </div>
+      </div>
+
+      <!-- NOTE field -->
+      <div id="noteFields" style="display:none">
+        <div class="field">
+          <label for="noteText">Note</label>
+          <input type="text" id="noteText" placeholder="Anything you want to keep secret">
+        </div>
+      </div>
+
+      <!-- CARD fields -->
+      <div id="cardFields" style="display:none">
+        <div class="field"><label for="cardNumber">Card number</label><input type="text" id="cardNumber" placeholder="4111 1111 1111 1111"></div>
+        <div class="field"><label for="cardExpiry">Expiry</label><input type="text" id="cardExpiry" placeholder="MM/YY"></div>
+        <div class="field"><label for="cardCvv">CVV</label><input type="text" id="cardCvv" placeholder="123"></div>
+      </div>
+
+      <!-- API_KEY fields -->
+      <div id="apiKeyFields" style="display:none">
+        <div class="field"><label for="apiKeyService">Service</label><input type="text" id="apiKeyService" placeholder="e.g. Stripe"></div>
+        <div class="field"><label for="apiKeyValue">Key / secret</label><input type="text" id="apiKeyValue" placeholder="sk_live_..."></div>
+      </div>
+
+      <!-- SSH_KEY fields -->
+      <div id="sshKeyFields" style="display:none">
+        <div class="field"><label for="sshKeyValue">Private key</label><input type="text" id="sshKeyValue" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></div>
+      </div>
+
+      <div class="field">
+        <label for="itemMasterPw">Master password</label>
+        <input type="password" id="itemMasterPw" required>
+        <div class="hint">Needed to unwrap your vault key — never stored.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeItemModal()">Cancel</button>
+        <button type="submit" class="btn-accent" id="itemSaveBtn">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- REVEAL MODAL -->
+<div class="modal-overlay" id="revealModalOverlay">
+  <div class="modal">
+    <h3 id="revealModalTitle">Reveal item</h3>
+    <div id="revealAlert" class="alert"></div>
+    <form id="revealForm">
+      <div class="field"><label for="revealMasterPw">Master password</label><input type="password" id="revealMasterPw" required></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeRevealModal()">Cancel</button>
+        <button type="submit" class="btn-accent">Reveal</button>
+      </div>
+    </form>
+    <div id="revealedSecret" class="secret-reveal" style="display:none"></div>
+    <button type="button" class="btn-ghost" id="copySecretBtn" style="display:none; width:100%; margin-top:8px;">📋 Copy (auto-clears in 30s)</button>
+    <div class="hint" id="revealCountdown" style="display:none; margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- SECURITY MODAL (2FA) -->
+<div class="modal-overlay" id="securityModalOverlay">
+  <div class="modal">
+    <h3>Two-factor authentication</h3>
+    <div id="securityAlert" class="alert"></div>
+    <div id="twoFaDisabledView">
+      <p class="hint" style="margin-bottom:16px">Add an authenticator app (Google Authenticator, Aegis, Authy) as a second layer of protection.</p>
+      <button class="btn-accent" id="start2faSetupBtn" style="width:100%">Set up 2FA</button>
+    </div>
+    <div id="twoFaSetupView" style="display:none; text-align:center;">
+      <img id="qrCodeImg" src="" alt="Scan with your authenticator app" style="border-radius:8px; margin-bottom:12px; max-width:100%;">
+      <div class="hint" style="margin-bottom:12px">Can't scan? Enter this manually: <br><code id="manualSecret"></code></div>
+      <form id="confirm2faForm">
+        <div class="field" style="text-align:left">
+          <label for="confirm2faCode">Enter the 6-digit code to confirm</label>
+          <input type="text" id="confirm2faCode" inputmode="numeric" maxlength="6" required>
+        </div>
+        <button type="submit" class="btn-accent" style="width:100%">Confirm & enable</button>
+      </form>
+    </div>
+    <div id="twoFaEnabledView" style="display:none">
+      <p class="hint" style="margin-bottom:16px">✅ Two-factor authentication is currently <strong style="color:var(--success)">enabled</strong>.</p>
+      <form id="disable2faForm">
+        <div class="field"><label for="disable2faPw">Master password (to disable)</label><input type="password" id="disable2faPw" required></div>
+        <button type="submit" class="btn-ghost danger-outline" style="width:100%">Disable 2FA</button>
+      </form>
+    </div>
+    <div class="modal-actions"><button type="button" class="btn-ghost" style="width:100%" onclick="closeSecurityModal()">Close</button></div>
+  </div>
+</div>
+
+<!-- ACTIVITY MODAL -->
+<div class="modal-overlay" id="activityModalOverlay">
+  <div class="modal" style="max-width:520px">
+    <h3>Recent activity</h3>
+    <div id="activityList" style="max-height:400px; overflow-y:auto;"></div>
+    <div class="modal-actions"><button type="button" class="btn-ghost" style="width:100%" onclick="closeActivityModal()">Close</button></div>
+  </div>
+</div>
+
+<!-- SCORECARD MODAL -->
+<div class="modal-overlay" id="scorecardModalOverlay">
+  <div class="modal">
+    <h3>Vault health check</h3>
+    <div id="scorecardAlert" class="alert"></div>
+
+    <div id="scorecardPromptView">
+      <p class="hint" style="margin-bottom:16px">Enter your master password to scan your vault for weak or reused passwords.</p>
+      <form id="scorecardForm">
+        <div class="field"><label for="scorecardPw">Master password</label><input type="password" id="scorecardPw" required></div>
+        <button type="submit" class="btn-accent" style="width:100%">Run health check</button>
+      </form>
+    </div>
+
+    <div id="scorecardResultView" style="display:none">
+      <div class="scorecard-grid">
+        <div class="scorecard-stat"><span class="num" id="statTotal">0</span><span class="label">Total items</span></div>
+        <div class="scorecard-stat" id="stat2fa"><span class="num" id="stat2faVal">—</span><span class="label">2FA status</span></div>
+        <div class="scorecard-stat" id="statWeak"><span class="num" id="statWeakVal">0</span><span class="label">Weak passwords</span></div>
+        <div class="scorecard-stat" id="statReused"><span class="num" id="statReusedVal">0</span><span class="label">Reused passwords</span></div>
+      </div>
+      <div id="scorecardDetails"></div>
+    </div>
+
+    <div class="modal-actions"><button type="button" class="btn-ghost" style="width:100%" onclick="closeScorecardModal()">Close</button></div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/password-utils.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

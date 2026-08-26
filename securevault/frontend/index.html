@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureVault</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-shell">
+
+  <div class="auth-side">
+    <svg class="dial" viewBox="0 0 280 280">
+      <circle class="dial-ring" cx="140" cy="140" r="120"></circle>
+      <circle class="dial-ring" cx="140" cy="140" r="90"></circle>
+      <g id="ticks"></g>
+      <line class="dial-needle" x1="140" y1="140" x2="140" y2="40"></line>
+      <circle cx="140" cy="140" r="5" fill="#C9A227"></circle>
+    </svg>
+    <div class="brand-mark">
+      <h1>SecureVault</h1>
+      <p>Your credentials, encrypted with AES-256-GCM under a key that's never sent to the server. Not even we can read your vault.</p>
+    </div>
+  </div>
+
+  <div class="auth-form-area">
+    <div class="auth-card">
+
+      <div class="tab-row">
+        <button class="tab-btn active" id="tabLogin" onclick="showTab('login')">Log in</button>
+        <button class="tab-btn" id="tabRegister" onclick="showTab('register')">Create account</button>
+      </div>
+
+      <div id="alertBox" class="alert"></div>
+
+      <!-- LOGIN FORM -->
+      <form id="loginForm">
+        <h2>Welcome back</h2>
+        <p class="subtitle">Unlock your vault with your master password.</p>
+        <div class="field">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="loginPassword">Master password</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-primary" id="loginBtn">Unlock vault</button>
+        <p class="subtitle" style="margin-top:14px; text-align:center;">
+          <a href="#" onclick="showTab('recover'); return false;" style="font-size:0.85rem;">Forgot your master password?</a>
+        </p>
+      </form>
+
+      <!-- 2FA CODE FORM -->
+      <form id="twoFaForm" style="display:none">
+        <h2>Enter your code</h2>
+        <p class="subtitle">Open your authenticator app and enter the 6-digit code.</p>
+        <div class="field">
+          <label for="twoFaCode">Authentication code</label>
+          <input type="text" id="twoFaCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" required autocomplete="one-time-code">
+        </div>
+        <button type="submit" class="btn-primary" id="twoFaBtn">Verify</button>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="registerForm" style="display:none">
+        <h2>Create your vault</h2>
+        <p class="subtitle">Choose your master password carefully — it can't be recovered without your recovery kit.</p>
+        <div class="field">
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label for="regPassword">Master password</label>
+          <input type="password" id="regPassword" required minlength="8" autocomplete="new-password">
+          <div class="strength-track"><div class="strength-fill" id="regStrengthFill"></div></div>
+          <div class="hint" id="regStrengthLabel">At least 8 characters.</div>
+        </div>
+        <button type="submit" class="btn-primary" id="registerBtn">Create vault</button>
+      </form>
+
+      <!-- RECOVERY KIT DISPLAY (shown once, right after registration) -->
+      <div id="recoveryKitView" style="display:none">
+        <h2>Save your recovery kit</h2>
+        <p class="subtitle">If you ever forget your master password, this code is the ONLY way back into your vault. We don't store it — write it down or save it somewhere safe now.</p>
+        <div class="recovery-box" id="recoveryCodeDisplay"></div>
+        <div class="field">
+          <label><input type="checkbox" id="recoverySavedCheck" style="width:auto; margin-right:8px;">I've saved my recovery code somewhere safe</label>
+        </div>
+        <button type="button" class="btn-primary" id="continueToVaultBtn" disabled>Continue to my vault</button>
+      </div>
+
+      <!-- ACCOUNT RECOVERY FORM -->
+      <form id="recoverForm" style="display:none">
+        <h2>Recover your account</h2>
+        <p class="subtitle">Enter your email, recovery code, and a new master password.</p>
+        <div class="field">
+          <label for="recoverEmail">Email</label>
+          <input type="email" id="recoverEmail" required>
+        </div>
+        <div class="field">
+          <label for="recoverCode">Recovery code</label>
+          <input type="text" id="recoverCode" required placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX">
+        </div>
+        <div class="field">
+          <label for="recoverNewPassword">New master password</label>
+          <input type="password" id="recoverNewPassword" required minlength="8">
+          <div class="hint">Your existing vault items will still decrypt fine — only how you unlock them changes.</div>
+        </div>
+        <button type="submit" class="btn-primary" id="recoverBtn">Recover account</button>
+        <p class="subtitle" style="margin-top:14px; text-align:center;">
+          <a href="#" onclick="showTab('login'); return false;" style="font-size:0.85rem;">Back to log in</a>
+        </p>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/password-utils.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>
