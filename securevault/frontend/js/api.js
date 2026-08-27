@@ -1,6 +1,7 @@
 // IMPORTANT: change this to your deployed backend URL once you host it,
 // e.g. 'https://securevault-backend.onrender.com/api'
-const API_BASE = 'http://localhost:8080/api';
+// const API_BASE = 'http://localhost:8080/api';
+const API_BASE = 'https://securevault-ckwv.onrender.com/api';
 
 const Api = {
   token() {
